@@ -1,0 +1,13 @@
+{
+  "name": "tesla-can-fly-scores",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs && wrangler pages dev",
+    "deploy": "node build.mjs && wrangler pages deploy --branch main"
+  },
+  "devDependencies": {
+    "wrangler": "4.151.0"
+  }
+}

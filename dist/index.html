@@ -24,7 +24,7 @@
 
       <section class="game-shell" id="game-shell" aria-label="Roadster 跑酷游戏">
         <div class="game-toolbar">
-          <div class="track"><span class="live-square"></span><span>城市公路</span><span class="track-code">CITY CIRCUIT — 001</span></div>
+          <div class="track"><span class="live-square"></span><span class="track-name">城市公路<small class="author-credit">作者：家里空调 16 ℃</small></span><span class="track-code">CITY CIRCUIT — 001</span></div>
           <div class="toolbar-actions">
             <button id="restart" class="icon-button mobile-only" aria-label="重新开始" title="重新开始">↻</button>
             <button id="sound" class="icon-button" aria-label="开启音效" aria-pressed="false" title="音效"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path id="sound-waves" d="m16 9 6 6m0-6-6 6"/></svg></button>
@@ -42,6 +42,11 @@
               <div class="overlay-eyebrow" id="overlay-eyebrow">特斯拉能飞</div>
               <h2 id="overlay-title">准备起飞</h2>
               <p id="overlay-copy">纯电超跑 Roadster（火箭版）</p>
+              <div id="rank-result" class="rank-result" hidden>
+                <div id="rank-status" role="status"></div>
+                <button id="rank-open" class="text-button" hidden>查看排行榜</button>
+                <button id="rank-retry" class="text-button" hidden>重试排名</button>
+              </div>
               <button class="primary-button" id="start"><span id="start-label">开始驾驶</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button>
               <span class="start-hint" id="start-hint">或按 <kbd>SPACE</kbd> 起跳</span>
             </div>
@@ -55,17 +60,18 @@
         </div>
         <div class="touch-controls" aria-label="触屏操作">
           <button id="touch-down" aria-label="按住下压，快速落地">↓ <span>下压</span></button>
-          <button id="touch-jump" aria-label="起跳，长按跳得更高">↑ <span>起跳</span></button>
+          <button id="touch-jump" aria-label="起跳">↑ <span>起跳</span></button>
         </div>
       </section>
 
-      <div class="instructions" aria-label="操作说明"><div><span class="instruction-number">01</span><kbd>SPACE</kbd><span class="key-or">/</span><kbd>↑</kbd><span>起跳 <small>长按跳得更高</small></span></div><div><span class="instruction-number">02</span><kbd>↓</kbd><span>下压 <small>快速落地 / 躲过无人机</small></span></div><div><span class="instruction-number">03</span><kbd>R</kbd><span>再来一局 <small>重新开始</small></span></div></div>
+      <div class="instructions" aria-label="操作说明"><div><span class="instruction-number">01</span><kbd>SPACE</kbd><span class="key-or">/</span><kbd>↑</kbd><span>起跳 </span></div><div><span class="instruction-number">02</span><kbd>↓</kbd><span>下压 <small>快速落地 / 躲过无人机</small></span></div><div><span class="instruction-number">03</span><kbd>R</kbd><span>再来一局 <small>重新开始</small></span></div></div>
     </main>
 
     <footer><span>特斯拉能飞</span><div><span>非官方同人小游戏</span><span class="footer-dot">·</span><button id="credits-open">游戏说明 & 开源致谢 <span>↗</span></button></div></footer>
   </div>
 
-  <dialog id="credits" aria-labelledby="credits-title"><button id="credits-close" class="dialog-close" aria-label="关闭说明">×</button><p class="eyebrow">BEHIND THE RUN</p><h2 id="credits-title">特斯拉能飞</h2><p>玩法参考 Google Chrome 的离线小恐龙游戏。自动前进、可变高度跳跃、逐渐加速、随机障碍、碰撞结束；700 分后短暂进入夜间。</p><p>银白色 Roadster 与白色气流推进参考本次发布会画面，开场先沿圆弧坡道爬升，再落入城市道路。角色是像素风演绎：仙人掌换成城市车辆，翼龙换成无人机。<b>↓</b> 可以在空中快速落地，也可以压低车身躲避低空无人机。</p><p>空格 / ↑ 起跳，P / Esc 暂停，R 重开。鼠标点击赛道也可起跳。最高分只保存在当前浏览器；音效默认关闭。</p><p>跳跃物理、速度曲线、计分与间距算法改编自 <a href="https://github.com/wayou/t-rex-runner" target="_blank" rel="noopener noreferrer">wayou/t-rex-runner</a> 中的 Chromium 源代码，遵循 BSD 许可。</p><div class="license-links"><a href="./LICENSE-chromium.txt" target="_blank">Chromium 许可 ↗</a><a href="./LICENSE-t-rex-runner.txt" target="_blank">t-rex-runner 许可 ↗</a></div><p class="legal-note">独立同人作品，与 Tesla、Google 或 SpaceX 无隶属或合作关系。车辆与推进效果为游戏艺术表现。</p></dialog>
+  <dialog id="credits" aria-labelledby="credits-title"><button id="credits-close" class="dialog-close" aria-label="关闭说明">×</button><p class="eyebrow">BEHIND THE RUN</p><h2 id="credits-title">特斯拉能飞</h2><p>玩法参考 Google Chrome 的离线小恐龙游戏。自动前进、跳跃、逐渐加速、随机障碍、碰撞结束；700 分后短暂进入夜间。</p><p>银白色 Roadster 与白色气流推进参考本次发布会画面，开场先沿圆弧坡道爬升，再落入城市道路。角色是像素风演绎：仙人掌换成城市车辆，翼龙换成无人机。<b>↓</b> 可以在空中快速落地，也可以压低车身躲避低空无人机。</p><p>空格 / ↑ 起跳，P / Esc 暂停，R 重开。鼠标点击赛道也可起跳。联网时自动记录成绩并参与全体玩家排名；音效默认关闭。</p><p>跳跃物理、速度曲线、计分与间距算法改编自 <a href="https://github.com/wayou/t-rex-runner" target="_blank" rel="noopener noreferrer">wayou/t-rex-runner</a> 中的 Chromium 源代码，遵循 BSD 许可。</p><div class="license-links"><a href="./LICENSE-chromium.txt" target="_blank">Chromium 许可 ↗</a><a href="./LICENSE-t-rex-runner.txt" target="_blank">t-rex-runner 许可 ↗</a></div><p class="legal-note">独立同人作品，与 Tesla、Google 或 SpaceX 无隶属或合作关系。车辆与推进效果为游戏艺术表现。</p></dialog>
+  <dialog id="rank-dialog" aria-labelledby="rank-title"><button id="rank-close" class="dialog-close" aria-label="关闭排行榜">×</button><h2 id="rank-title">全体玩家排行榜</h2><p>每位玩家保留最高分，同分并列。本局排名与其他玩家的最高分比较。</p><ol id="rank-list"></ol><p class="legal-note">匿名参赛，后台记录每局分数与时间。清除浏览器数据或换设备会成为新玩家。</p></dialog>
   <div class="sr-only" id="announcer" aria-live="polite" role="status"></div>
   <script type="module" src="./app.js"></script>
 </body>

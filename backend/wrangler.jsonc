@@ -1,0 +1,16 @@
+{
+  "name": "tesla-can-fly-scores",
+  "compatibility_date": "2026-10-16",
+  "vars": {
+    "ALLOWED_ORIGINS": "https://zxygaga781.github.io,http://127.0.0.1:8916,http://localhost:8916"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tesla-can-fly-scores",
+      "database_id": "ef434d36-0185-409f-b1b2-55186ec73e74",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "pages_build_output_dir": "./.pages-dist"
+}

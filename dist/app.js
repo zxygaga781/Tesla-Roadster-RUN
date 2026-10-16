@@ -1,5 +1,6 @@
 import { Runner, CONFIG } from './core.js';
 import { Renderer } from './renderer.js';
+import { beginRankedRun, finishRankedRun } from './leaderboard.js';
 
 const $ = id => document.getElementById(id);
 const mobileLayout = window.matchMedia('(max-width: 760px), (max-height: 500px) and (max-width: 1100px), (pointer: coarse) and (max-width: 1100px)');
@@ -14,6 +15,7 @@ let audioContext;
 let soundOn = storage.get('roadster-run-sound', 'off') === 'on';
 let lastUi = 0;
 let previousNight = false;
+let rankedRun = null;
 const runner = new Runner({ best:Number.isFinite(savedBest) && savedBest >= 0 ? Math.floor(savedBest) : 0, onEvent });
 renderer = new Renderer($('game'), runner);
 renderer.preview($('model-preview'));
@@ -43,6 +45,7 @@ function onEvent(event) {
   renderer?.burst(event);
   if (['jump', 'crash', 'milestone'].includes(event)) tone(event);
   if (event === 'crash') {
+    if (rankedRun) { rankedRun.score = runner.score; submitScore(rankedRun); }
     storage.set('roadster-run-best', runner.best);
     $('announcer').textContent = `本次 ${runner.score} 分，最高 ${runner.best} 分。可以再来一局。`;
   }
@@ -52,6 +55,12 @@ function onEvent(event) {
     $('announcer').textContent = `已达到 ${runner.score} 分。`;
   }
   if (event === 'start' || event === 'intro') {
+    if (event === 'intro' || !rankedRun || rankedRun.score !== null) {
+      rankedRun = { session:beginRankedRun(), score:null, pending:false };
+    }
+    $('rank-status').textContent = '';
+    $('rank-retry').hidden = true;
+    $('rank-open').hidden = true;
     $('announcer').textContent = '游戏开始。';
     milestoneUntil = 0;
   }
@@ -63,6 +72,7 @@ function syncUI() {
   $('stage').dataset.state = state;
   const running = state === 'running' || state === 'intro';
   $('overlay').hidden = running;
+  $('rank-result').hidden = state !== 'crashed';
   $('stage').classList.toggle('crashed', state === 'crashed');
   $('score').textContent = String(runner.score).padStart(5,'0');
   $('best').textContent = String(Math.max(runner.best, runner.score)).padStart(5,'0');
@@ -73,7 +83,7 @@ function syncUI() {
   $('start').disabled = state === 'crashed' && runner.crashAge < CONFIG.RESTART_DELAY;
   const labels = {
     ready:['特斯拉能飞','准备起飞','纯电超跑 Roadster（火箭版）','开始驾驶','等待出发'],
-    crashed:[runner.newBest ? 'NEW HIGH SCORE' : 'GAME OVER','本次行驶结束',`本次 ${String(runner.score).padStart(5,'0')} 分${runner.newBest ? ' · 新纪录！' : ''}`,'重新出发','本次行驶结束'],
+    crashed:[runner.newBest ? 'NEW HIGH SCORE' : 'GAME OVER','本次行驶结束',`本次 ${String(runner.score).padStart(5,'0')} 分${runner.newBest ? ' · 新纪录！' : ''}`,'再买一辆','本次行驶结束'],
     paused:['PAUSED','已暂停','纯电超跑 Roadster（火箭版）','继续驾驶','已暂停'],
     running:['','','','','行驶中'],
     intro:['','','','','圆弧坡道起步'],
@@ -83,7 +93,7 @@ function syncUI() {
     $('overlay-title').textContent = labels[1];
     $('overlay-copy').textContent = labels[2];
     $('start-label').textContent = labels[3];
-    $('start-hint').innerHTML = mobileLayout.matches ? (state === 'paused' ? '点按继续驾驶' : '轻点起跳 · 长按跳得更高') : state === 'crashed' ? '按 <kbd>SPACE</kbd> 或 <kbd>R</kbd> 再来一局' : state === 'paused' ? '按 <kbd>SPACE</kbd> 或 <kbd>P</kbd> 继续' : '或按 <kbd>SPACE</kbd> 起跳';
+    $('start-hint').innerHTML = mobileLayout.matches ? (state === 'paused' ? '点按继续驾驶' : state === 'crashed' ? '点按再买一辆，重新开始' : '轻点屏幕或按钮起跳') : state === 'crashed' ? '按 <kbd>SPACE</kbd> 或 <kbd>R</kbd> 再来一局' : state === 'paused' ? '按 <kbd>SPACE</kbd> 或 <kbd>P</kbd> 继续' : '或按 <kbd>SPACE</kbd> 起跳';
   }
   $('run-state').textContent = labels[4];
   const boosting = running && runner.player.jumping && runner.player.velocity < 1;
@@ -99,7 +109,7 @@ function syncUI() {
 }
 
 function act() {
-  if ($('credits').open) return;
+  if ($('credits').open || $('rank-dialog').open) return;
   if (runner.state === 'paused') runner.resume();
   else if (runner.state === 'ready' || (runner.state === 'crashed' && runner.crashAge >= CONFIG.RESTART_DELAY)) runner.launch();
   else if (runner.state === 'running') runner.jump();
@@ -117,7 +127,7 @@ $('restart').addEventListener('click', () => runner.launch());
 mobileLayout.addEventListener('change', syncUI);
 
 document.addEventListener('keydown', event => {
-  if ($('credits').open || event.metaKey || event.ctrlKey || event.altKey) return;
+  if ($('credits').open || $('rank-dialog').open || event.metaKey || event.ctrlKey || event.altKey) return;
   if (event.target.closest('button,a,input,textarea,select') && ['Space','Enter'].includes(event.code)) return;
   if (['Space','ArrowUp','ArrowDown','KeyP','KeyR','Escape','Enter'].includes(event.code)) event.preventDefault();
   if (event.repeat) return;
@@ -201,3 +211,32 @@ function frame(time) {
   requestAnimationFrame(frame);
 }
 syncSound(); syncUI(); requestAnimationFrame(frame);
+
+async function submitScore(run) {
+  if (run.pending) return;
+  run.pending = true;
+  $('rank-status').textContent = '正在查询全体玩家排名…';
+  $('rank-retry').hidden = true;
+  try {
+    const data = await finishRankedRun(run.session, run.score);
+    if (rankedRun !== run) return;
+    $('rank-status').textContent = `本局第 ${data.rank} 名 / ${data.total} 位玩家`;
+    $('rank-open').hidden = false;
+    $('rank-list').replaceChildren();
+    for (const row of data.top) {
+      const item = document.createElement('li');
+      for (const text of [`#${row.rank}`, row.name, `${row.score} 分`]) {
+        const span = document.createElement('span'); span.textContent = text; item.append(span);
+      }
+      $('rank-list').append(item);
+    }
+    $('announcer').textContent += ` 本局排名第 ${data.rank} 名，共 ${data.total} 位玩家。`;
+  } catch (error) {
+    if (rankedRun !== run) return;
+    $('rank-status').textContent = error.message === '本局未联网，成绩未上传' ? error.message : '排名暂时不可用，请重试';
+    $('rank-retry').hidden = error.message === '本局未联网，成绩未上传';
+  } finally { run.pending = false; }
+}
+$('rank-retry').addEventListener('click', () => { if (rankedRun && rankedRun.score !== null) submitScore(rankedRun); });
+$('rank-open').addEventListener('click', () => $('rank-dialog').showModal());
+$('rank-close').addEventListener('click', () => $('rank-dialog').close());
