@@ -72,7 +72,7 @@ function syncUI() {
   $('pause').innerHTML = state === 'paused' ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 4 13 8-13 8V4Z"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>';
   $('start').disabled = state === 'crashed' && runner.crashAge < CONFIG.RESTART_DELAY;
   const labels = {
-    ready:['TESLA ROADSTER','准备起飞','纯电超跑 Roadster（火箭版）','开始驾驶','等待出发'],
+    ready:['特斯拉能飞','准备起飞','纯电超跑 Roadster（火箭版）','开始驾驶','等待出发'],
     crashed:[runner.newBest ? 'NEW HIGH SCORE' : 'GAME OVER','本次行驶结束',`本次 ${String(runner.score).padStart(5,'0')} 分${runner.newBest ? ' · 新纪录！' : ''}`,'重新出发','本次行驶结束'],
     paused:['PAUSED','已暂停','纯电超跑 Roadster（火箭版）','继续驾驶','已暂停'],
     running:['','','','','行驶中'],
