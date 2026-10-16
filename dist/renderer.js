@@ -30,7 +30,7 @@ export class Renderer {
 
   resize() {
     const rect = this.canvas.getBoundingClientRect();
-    this.width = Math.max(280, Math.min(700, rect.width));
+    this.width = Math.max(600, Math.min(700, rect.width));
     this.height = Math.max(175, Math.round(rect.height * this.width / Math.max(1, rect.width)));
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = Math.round(rect.width * dpr);

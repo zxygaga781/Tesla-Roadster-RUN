@@ -26,6 +26,7 @@
         <div class="game-toolbar">
           <div class="track"><span class="live-square"></span><span>城市公路</span><span class="track-code">CITY CIRCUIT — 001</span></div>
           <div class="toolbar-actions">
+            <button id="restart" class="icon-button mobile-only" aria-label="重新开始" title="重新开始">↻</button>
             <button id="sound" class="icon-button" aria-label="开启音效" aria-pressed="false" title="音效"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path id="sound-waves" d="m16 9 6 6m0-6-6 6"/></svg></button>
             <button id="pause" class="icon-button" aria-label="暂停游戏" title="暂停 / P" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
             <button id="fullscreen" class="icon-button" aria-label="全屏游戏" title="全屏"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button>
@@ -51,6 +52,10 @@
         <div class="dashboard">
           <div class="system-status"><span class="status-dot" id="system-dot"></span><span id="system-label">推进系统就绪</span></div>
           <div class="dashboard-right"><span class="speed-label">PACE <b id="speed">1.0×</b></span><span class="divider"></span><span id="run-state">等待出发</span></div>
+        </div>
+        <div class="touch-controls" aria-label="触屏操作">
+          <button id="touch-down" aria-label="按住下压，快速落地">↓ <span>下压</span></button>
+          <button id="touch-jump" aria-label="起跳，长按跳得更高">↑ <span>起跳</span></button>
         </div>
       </section>
 

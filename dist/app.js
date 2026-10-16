@@ -2,6 +2,7 @@ import { Runner, CONFIG } from './core.js';
 import { Renderer } from './renderer.js';
 
 const $ = id => document.getElementById(id);
+const mobileLayout = window.matchMedia('(max-width: 760px), (max-height: 500px) and (max-width: 1100px), (pointer: coarse) and (max-width: 1100px)');
 const storage = {
   get(key, fallback) { try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; } },
   set(key, value) { try { localStorage.setItem(key, String(value)); } catch { /* Private browsing can disable storage. */ } },
@@ -59,6 +60,7 @@ function onEvent(event) {
 
 function syncUI() {
   const state = runner.state;
+  $('stage').dataset.state = state;
   const running = state === 'running' || state === 'intro';
   $('overlay').hidden = running;
   $('stage').classList.toggle('crashed', state === 'crashed');
@@ -81,7 +83,7 @@ function syncUI() {
     $('overlay-title').textContent = labels[1];
     $('overlay-copy').textContent = labels[2];
     $('start-label').textContent = labels[3];
-    $('start-hint').innerHTML = state === 'crashed' ? '按 <kbd>SPACE</kbd> 或 <kbd>R</kbd> 再来一局' : state === 'paused' ? '按 <kbd>SPACE</kbd> 或 <kbd>P</kbd> 继续' : '或按 <kbd>SPACE</kbd> 起跳';
+    $('start-hint').innerHTML = mobileLayout.matches ? (state === 'paused' ? '点按继续驾驶' : '轻点起跳 · 长按跳得更高') : state === 'crashed' ? '按 <kbd>SPACE</kbd> 或 <kbd>R</kbd> 再来一局' : state === 'paused' ? '按 <kbd>SPACE</kbd> 或 <kbd>P</kbd> 继续' : '或按 <kbd>SPACE</kbd> 起跳';
   }
   $('run-state').textContent = labels[4];
   const boosting = running && runner.player.jumping && runner.player.velocity < 1;
@@ -111,6 +113,8 @@ function togglePause() {
 
 $('start').addEventListener('click', act);
 $('pause').addEventListener('click', togglePause);
+$('restart').addEventListener('click', () => runner.launch());
+mobileLayout.addEventListener('change', syncUI);
 
 document.addEventListener('keydown', event => {
   if ($('credits').open || event.metaKey || event.ctrlKey || event.altKey) return;
@@ -130,15 +134,25 @@ document.addEventListener('keyup', event => {
 });
 
 function bindPointer(element, down, up) {
+  let activePointer = null;
   element.addEventListener('pointerdown', event => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || activePointer !== null) return;
+    activePointer = event.pointerId;
     event.preventDefault();
     element.setPointerCapture(event.pointerId);
     down();
   });
-  for (const name of ['pointerup','pointercancel','lostpointercapture']) element.addEventListener(name, () => up());
+  for (const name of ['pointerup','pointercancel','lostpointercapture']) element.addEventListener(name, event => {
+    if (event.pointerId !== activePointer) return;
+    activePointer = null;
+    up();
+  });
 }
 bindPointer($('game'), act, () => runner.releaseJump());
+bindPointer($('touch-jump'), act, () => runner.releaseJump());
+bindPointer($('touch-down'), () => { if (runner.state === 'running') runner.setDown(true); }, () => runner.setDown(false));
+$('touch-jump').addEventListener('click', event => { if (event.detail === 0) { act(); runner.releaseJump(); } });
+function releaseControls() { runner.releaseJump(); runner.setDown(false); }
 
 function syncSound() {
   $('sound').setAttribute('aria-pressed', String(soundOn));
@@ -166,12 +180,12 @@ document.addEventListener('fullscreenchange', () => {
 $('credits-open').addEventListener('click', () => { runner.pause(); $('credits').showModal(); });
 $('credits-close').addEventListener('click', () => $('credits').close());
 $('credits').addEventListener('click', event => { if (event.target === $('credits')) { const r = $('credits').getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) $('credits').close(); } });
-window.addEventListener('blur', () => runner.pause());
-document.addEventListener('visibilitychange', () => { if (document.hidden) runner.pause(); });
+window.addEventListener('blur', () => { releaseControls(); runner.pause(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { releaseControls(); runner.pause(); } });
 window.addEventListener('pagehide', () => storage.set('roadster-run-best', Math.max(runner.best, runner.score)));
 new ResizeObserver(() => {
   const rect = $('game').getBoundingClientRect();
-  const width = Math.max(280, Math.min(700, rect.width));
+  const width = Math.max(600, Math.min(700, rect.width));
   if (Math.abs(width - renderer.width) > 1) runner.pause();
   renderer.resize();
 }).observe($('stage'));
